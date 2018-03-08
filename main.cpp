@@ -11,7 +11,6 @@ void f1()
 
 int main()
 {
-    
     // test for join and detach
     std::thread t1(f1);
     //t1.join();
@@ -21,7 +20,7 @@ int main()
     t1.join();
     //t1.detach();
     std::cout << "main thread quit!"<<std::endl;
-    s
+    
     return 0;
 }
 

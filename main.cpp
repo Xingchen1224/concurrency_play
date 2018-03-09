@@ -2,33 +2,83 @@
 #include <future>
 #include <chrono>
 #include <memory>
+#include <vector>
+#include <iterator>
 
-void f_unique(std::unique_ptr<size_t> pu)
+void f1(int a, int& b, int&& c)
 {
-    std::cout << "inner f_unique: " << *pu << std::endl;
+    std::cout << "a: " << a << " b:" << b << " c:" << c<< std::endl;
 }
 
-void f_shared(std::shared_ptr<size_t> ps)
+class BigDataClass
 {
-    std::cout << "inner f_shared: " << *ps << std::endl;
+public:
+    BigDataClass()
+    {
+        size_t count = 10000000;
+        data.reserve(count);
+        for (size_t i=0; i<count; ++i) {
+            data.emplace_back(i);
+        }
+    }
+    
+    void computeSum()
+    {
+        size_t sum = 0;
+        
+        std::vector<size_t>::iterator itr = data.begin();
+        while (itr != data.end())
+        {
+            sum += (*itr);
+            ++itr;
+        }
+        
+        std::cout << sum << std::endl;
+    }
+private:
+    std::vector<size_t> data;
+};
+
+void f2(BigDataClass ins)
+{
+    ins.computeSum();
+}
+
+void f3(BigDataClass& ref)
+{
+    ref.computeSum();
+}
+
+void f4(BigDataClass&& rval)
+{
+    rval.computeSum();
 }
 
 int main()
 {
-    std::unique_ptr<size_t> p1 = std::make_unique<size_t>(222);
+    int aa = 111;
+    int bb = 222;
+    int cc = 333;
+   
+    //f1(aa,bb,cc); // compile error
+    f1(aa,bb,std::move(cc));
     
-    std::cout << "unique before move: " << *p1 << std::endl;
-    //f_unique(p1); // compile error: std::move() is required
+    BigDataClass b;
     
-    f_unique(std::move(p1));
-    //std::cout << "unique after move: " << *p1 << std::endl; // runtime error: bad access
+    auto now1 = std::chrono::system_clock::now();
+    f2(b);
+    auto now2 = std::chrono::system_clock::now();
+    std::cout << "value takes: " << std::chrono::duration_cast<std::chrono::milliseconds>(now2 - now1).count() << " ms" << std::endl;
     
-    std::shared_ptr<size_t> p2 = std::make_shared<size_t>(666);
+    auto now3 = std::chrono::system_clock::now();
+    f3(b);
+    auto now4 = std::chrono::system_clock::now();
+    std::cout << "ref takes: " << std::chrono::duration_cast<std::chrono::milliseconds>(now4 - now3).count() << " ms" << std::endl;
     
-    std::cout << "shared before func: " << *p2 << std::endl;
-    f_shared(p2); // compile ok, runtime ok.
-    //f_shared(std::move(p2));// compile ok, runtime error: bad access
-    std::cout << "shared after func: " << *p2 << std::endl;
+    auto now5 = std::chrono::system_clock::now();
+    f4(std::move(b));
+    auto now6 = std::chrono::system_clock::now();
+    std::cout << "rval takes: " << std::chrono::duration_cast<std::chrono::milliseconds>(now6 - now5).count() << " ms" << std::endl;
     
     return 0;
 }

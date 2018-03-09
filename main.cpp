@@ -2,23 +2,19 @@
 #include <future>
 #include <chrono>
 
-void f1()
+void f1(std::string && what, int&& x = 0)
 {
-    std::cout << "f1!"<<std::endl;
-    std::this_thread::sleep_for(std::chrono::seconds(5));
-    std::cout << "f1 5s later!"<<std::endl;
+    std::cout << x << " bottle of " << what << std::endl;
 }
 
 int main()
 {
-    // test for join and detach
-    std::thread t1(f1);
-    //t1.join();
-    //t1.detach();
+    std::thread t1(f1,"beers",2);
+    
     std::this_thread::sleep_for(std::chrono::seconds(1));
     std::cout << "main 1s later!"<<std::endl;
     t1.join();
-    //t1.detach();
+   
     std::cout << "main thread quit!"<<std::endl;
     
     return 0;

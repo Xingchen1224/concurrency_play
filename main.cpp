@@ -1,41 +1,34 @@
 #include <iostream>
 #include <future>
 #include <chrono>
+#include <memory>
 
-void f1(std::string && what, int&& x = 0)
+void f_unique(std::unique_ptr<size_t> pu)
 {
-    std::cout << x << " bottles of " << what << std::endl;
+    std::cout << "inner f_unique: " << *pu << std::endl;
 }
 
-void f2(std::string what, int x = 0)
+void f_shared(std::shared_ptr<size_t> ps)
 {
-    std::cout << x << " glasses of " << what << std::endl;
+    std::cout << "inner f_shared: " << *ps << std::endl;
 }
-
-class F3
-{
-public:
-    void f3(size_t data)
-    {
-        ++data;
-        this->m_data = data;
-        std::cout << "data: " << data << std::endl;
-    }
-private:
-    size_t m_data{0};
-};
 
 int main()
 {
-    std::thread t1(f1,"beer",2); // global func void
-    t1.join();
+    std::unique_ptr<size_t> p1 = std::make_unique<size_t>(222);
     
-    std::thread t2(f2,"milk",3); // global func with params
-    t2.join();
+    std::cout << "unique before move: " << *p1 << std::endl;
+    //f_unique(p1); // compile error: std::move() is required
     
-    F3 f3_obj;
-    std::thread t3(&F3::f3,&f3_obj, 666);
-    t3.join();
+    f_unique(std::move(p1));
+    //std::cout << "unique after move: " << *p1 << std::endl; // runtime error: bad access
+    
+    std::shared_ptr<size_t> p2 = std::make_shared<size_t>(666);
+    
+    std::cout << "shared before func: " << *p2 << std::endl;
+    f_shared(p2); // compile ok, runtime ok.
+    //f_shared(std::move(p2));// compile ok, runtime error: bad access
+    std::cout << "shared after func: " << *p2 << std::endl;
     
     return 0;
 }
